@@ -33,21 +33,21 @@ function VectorAnalogySolver() {
     <div>
       <Box className="vectorInputs">
         <WeaviateAutocomplete
-          label="This article"
+          label="This snippet"
           onArticleSelect={(article: Article) => setA(article)}
         />
         <Typography className="operator" variant="h3">
           -
         </Typography>
         <WeaviateAutocomplete
-          label="without the vibes of this article"
+          label="without the vibes of this snippet"
           onArticleSelect={(article: Article) => setB(article)}
         />
         <Typography className="operator" variant="h3">
           +
         </Typography>
         <WeaviateAutocomplete
-          label="plus the vibes of this article"
+          label="plus the vibes of this snippet"
           onArticleSelect={(article: Article) => setC(article)}
         />
       </Box>

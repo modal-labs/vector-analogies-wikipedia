@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import Autocomplete from "@mui/material/Autocomplete";
 import TextField from "@mui/material/TextField";
 import ClearIcon from "@mui/icons-material/Clear";
@@ -18,46 +18,35 @@ const WeaviateAutocomplete: React.FC<WeaviateAutocompleteProps> = ({
 }) => {
   const [inputValue, setInputValue] = useState("");
   const [options, setOptions] = useState<Article[]>([]);
-
-  // TODO: fix this ugly debounce
-  // eslint-disable-next-line @typescript-eslint/ban-types
-  const debounce = useCallback((func: Function, delay: number) => {
-    let timer: number;
-    return (...args: any) => {
-      clearTimeout(timer);
-      timer = window.setTimeout(() => func(...args), delay);
-    };
-  }, []);
-
-  const search = useCallback(async (searchText: string) => {
-    const data = await searchArticles(searchText);
-    setOptions(data);
-  }, []);
-
-  const debouncedSearch = useCallback(debounce(search, 300), [
-    search,
-    debounce,
-  ]);
+  const timer = useRef<number>();
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
+    const search = async (searchText: string) => {
+      setIsLoading(true);
+      const data = await searchArticles(searchText);
+      setOptions(data);
+      setIsLoading(false);
+    };
+
     if (inputValue) {
-      debouncedSearch(inputValue);
+      clearTimeout(timer.current);
+      timer.current = window.setTimeout(() => search(inputValue), 300);
     } else {
       setOptions([]);
     }
-  }, [search, inputValue, debouncedSearch]);
+  }, [inputValue]);
 
   return (
     <Autocomplete
       options={options}
-      getOptionLabel={(option) => decodeURI(option.url.split(".org/")[1])}
-      isOptionEqualToValue={(option, value) =>
-        option.identifier === value.identifier
+      getOptionLabel={(option) =>
+        decodeURI(option.url.split(".org/")[1]) + "  ..." + option.content
       }
-      onInputChange={(_event, newInputValue, reason) => {
-        if (reason != "reset") {
-          setInputValue(newInputValue);
-        }
+      isOptionEqualToValue={(option, value) => option.content === value.content}
+      filterOptions={(x) => x}
+      onInputChange={(_event, newInputValue) => {
+        setInputValue(newInputValue);
       }}
       onChange={(_event, newValue) => {
         if (newValue) {
@@ -69,8 +58,8 @@ const WeaviateAutocomplete: React.FC<WeaviateAutocompleteProps> = ({
       )}
       autoHighlight={true}
       autoSelect={true}
+      noOptionsText={isLoading ? "Searching..." : "No results"}
       clearIcon={<ClearIcon color="primary" />}
-      noOptionsText="Loading..."
       popupIcon={<ArrowDropDownIcon color="primary" />}
     />
   );
