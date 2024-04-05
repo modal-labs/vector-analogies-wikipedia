@@ -6,7 +6,7 @@ interface Results {
 
 const searchArticles = async (searchText: string) => {
   const response = await fetch(
-    `https://charles-modal-labs--modal-weaviate-query-dev.modal.run?q=${encodeURIComponent(
+    `https://charles-modal-labs--modal-weaviate-query.modal.run?q=${encodeURIComponent(
       searchText
     )}`
   );
@@ -19,7 +19,7 @@ const getNearest = async (vector: number[]) => {
     vector: vector,
   };
   const response = await fetch(
-    `https://charles-modal-labs--modal-weaviate-vector-dev.modal.run`,
+    `https://charles-modal-labs--modal-weaviate-vector.modal.run`,
     {
       method: "POST",
       headers: {
