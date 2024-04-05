@@ -162,7 +162,6 @@ class WeaviateClient:
         print(f"🧶: querying Wikipedia collection for '{q}'")
         results = collection.query.bm25(
             query=q,
-            query_properties=["title", "content"],
             limit=5,
             include_vector=True,
         )
@@ -196,9 +195,6 @@ class WeaviateClient:
 def query(q: str) -> dict:
     results = WeaviateClient().query.remote(q)
     return {"results": results}
-
-
-from typing import List
 
 
 @stub.function(keep_warm=1)
