@@ -43,8 +43,6 @@ const WeaviateAutocomplete: React.FC<WeaviateAutocompleteProps> = ({
       onInputChange={(_event, newInputValue, reason) => {
         if (reason != "reset") {
           setInputValue(newInputValue);
-        } else {
-          console.log(reason);
         }
       }}
       onChange={(_event, newValue) => {
