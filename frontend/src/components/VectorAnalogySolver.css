@@ -1,0 +1,12 @@
+.vectorInputs {
+    align-items: center;
+}
+
+.inputField {
+    font-size: 2rem;
+    width: 20rem;
+}
+
+.operator {
+    margin: 8px;
+}
