@@ -99,6 +99,7 @@ class WeaviateClient:
                         name="content",
                         data_type=wvc.config.DataType.TEXT,
                         index_filterable=False,
+                        index_searchable=False,
                     ),
                     wvc.config.Property(
                         name="url",
