@@ -7,7 +7,16 @@ import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import { searchArticles } from "../services/weaviateService.ts";
 import { Article } from "../types/article";
 
-const WeaviateAutocomplete = ({ label, onArticleSelect }) => {
+interface WeaviateAutocompleteProps {
+  label: string;
+  onArticleSelect: (article: Article) => void;
+  // include other props as needed
+}
+
+const WeaviateAutocomplete: React.FC<WeaviateAutocompleteProps> = ({
+  label,
+  onArticleSelect,
+}) => {
   const [inputValue, setInputValue] = useState("");
   const [options, setOptions] = useState<Article[]>([]);
 
@@ -39,7 +48,9 @@ const WeaviateAutocomplete = ({ label, onArticleSelect }) => {
         }
       }}
       onChange={(_event, newValue) => {
-        onArticleSelect(newValue);
+        if (newValue) {
+          onArticleSelect(newValue);
+        }
       }}
       renderInput={(params) => (
         <TextField {...params} label={label} variant="outlined" />
