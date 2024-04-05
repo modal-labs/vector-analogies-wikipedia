@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Autocomplete from "@mui/material/Autocomplete";
 import TextField from "@mui/material/TextField";
 import ClearIcon from "@mui/icons-material/Clear";
@@ -10,7 +10,6 @@ import { Article } from "../types/article";
 interface WeaviateAutocompleteProps {
   label: string;
   onArticleSelect: (article: Article) => void;
-  // include other props as needed
 }
 
 const WeaviateAutocomplete: React.FC<WeaviateAutocompleteProps> = ({
@@ -20,18 +19,33 @@ const WeaviateAutocomplete: React.FC<WeaviateAutocompleteProps> = ({
   const [inputValue, setInputValue] = useState("");
   const [options, setOptions] = useState<Article[]>([]);
 
-  useEffect(() => {
-    const search = async (searchText: string) => {
-      const data = await searchArticles(searchText);
-      setOptions(data);
+  // TODO: fix this ugly debounce
+  // eslint-disable-next-line @typescript-eslint/ban-types
+  const debounce = useCallback((func: Function, delay: number) => {
+    let timer: number;
+    return (...args: any) => {
+      clearTimeout(timer);
+      timer = window.setTimeout(() => func(...args), delay);
     };
+  }, []);
 
+  const search = useCallback(async (searchText: string) => {
+    const data = await searchArticles(searchText);
+    setOptions(data);
+  }, []);
+
+  const debouncedSearch = useCallback(debounce(search, 300), [
+    search,
+    debounce,
+  ]);
+
+  useEffect(() => {
     if (inputValue) {
-      search(inputValue);
+      debouncedSearch(inputValue);
     } else {
       setOptions([]);
     }
-  }, [inputValue]);
+  }, [search, inputValue, debouncedSearch]);
 
   return (
     <Autocomplete
