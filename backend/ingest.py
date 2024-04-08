@@ -1,3 +1,5 @@
+import json
+
 import modal
 
 from common import cache_dir, volume, image, generate_batches
@@ -27,7 +29,6 @@ def embed_dataset(down_scale: float = 1, batch_size: int = 512 * 50):
         dict: A dictionary containing the benchmark results.
     """
     import datetime
-    import json
     import time
 
     subset = load_dataset_from_disk(down_scale)
@@ -116,8 +117,6 @@ def embed_dataset(down_scale: float = 1, batch_size: int = 512 * 50):
 
 @stub.local_entrypoint()
 def main(down_scale: float = 1.0, annotation: str = ""):
-    import json
-
     batch_size = 512 * 2 * GPU_CONCURRENCY
     downscale_str = (
         f"{int(down_scale * 100)}%"
