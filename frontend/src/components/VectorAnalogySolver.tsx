@@ -3,14 +3,15 @@ import { Box, Typography } from "@mui/material";
 import { Article } from "../types/article";
 import WeaviateAutocomplete from "./WeaviateAutocomplete";
 import { getNearest } from "../services/weaviateService.ts";
-import ArticleCard from "./ArticleCard.tsx";
+import ArticleCard from "./ArticleCard";
+import helpArticle from "./helpArticle";
 import "./VectorAnalogySolver.css";
 
 function VectorAnalogySolver() {
   const [a, setA] = useState<Article | null>(null);
   const [b, setB] = useState<Article | null>(null);
   const [c, setC] = useState<Article | null>(null);
-  const [result, setResult] = useState<Article | null>(null);
+  const [result, setResult] = useState<Article | null>(helpArticle);
 
   useEffect(() => {
     const fetchVectorAnalogyResult = async () => {
@@ -18,7 +19,7 @@ function VectorAnalogySolver() {
         return;
       }
       const article = await getNearest(
-        a.vector.map((_, i) => a.vector[i] - b.vector[i] + c.vector[i])
+        a.vector.map((aValue, i) => aValue + b.vector[i] - c.vector[i])
       );
 
       setResult(article);
@@ -32,29 +33,34 @@ function VectorAnalogySolver() {
   return (
     <div>
       <Box className="vectorInputs">
+        <Typography className="operator" variant="h3">
+          What is to
+        </Typography>
         <WeaviateAutocomplete
           label="This snippet"
           onArticleSelect={(article: Article) => setA(article)}
         />
         <Typography className="operator" variant="h3">
-          -
+          as
         </Typography>
         <WeaviateAutocomplete
-          label="without the vibes of this snippet"
+          label="this snippet"
           onArticleSelect={(article: Article) => setB(article)}
         />
         <Typography className="operator" variant="h3">
-          +
+          is to
         </Typography>
         <WeaviateAutocomplete
-          label="plus the vibes of this snippet"
+          label="this snippet"
           onArticleSelect={(article: Article) => setC(article)}
         />
       </Box>
-      <Typography variant="h3" className="operator">
-        =
-      </Typography>
-      {result && <ArticleCard article={result} />}
+      {result && (
+        <ArticleCard
+          article={result}
+          withEllipses={result.identifier !== helpArticle.identifier}
+        />
+      )}
     </div>
   );
 }

@@ -6,6 +6,7 @@ import { styled } from "@mui/material/styles";
 
 interface ArticleCardProps {
   article: Article;
+  withEllipses: boolean;
 }
 
 // Styling the components using Material-UI's styled utility
@@ -19,8 +20,8 @@ const ReadMoreButton = styled(Button)(({ theme }) => ({
   marginTop: theme.spacing(2),
 }));
 
-const ArticleCard: React.FC<ArticleCardProps> = ({ article }) => {
-  const snippet = article.content.slice(0, 750) + "...";
+const ArticleCard: React.FC<ArticleCardProps> = ({ article, withEllipses }) => {
+  const snippet = article.content.slice(0, 750) + (withEllipses ? "..." : "");
 
   return (
     <StyledPaper elevation={3}>

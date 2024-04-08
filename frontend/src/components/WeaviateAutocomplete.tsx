@@ -20,6 +20,7 @@ const WeaviateAutocomplete: React.FC<WeaviateAutocompleteProps> = ({
   const [options, setOptions] = useState<Article[]>([]);
   const timer = useRef<number>();
   const [isLoading, setIsLoading] = useState(false);
+  const [dotCount, setDotCount] = useState(0);
 
   useEffect(() => {
     const search = async (searchText: string) => {
@@ -36,6 +37,25 @@ const WeaviateAutocomplete: React.FC<WeaviateAutocompleteProps> = ({
       setOptions([]);
     }
   }, [inputValue]);
+
+  useEffect(() => {
+    let intervalId: number | undefined;
+
+    if (isLoading) {
+      intervalId = window.setInterval(() => {
+        setDotCount((prevDotCount) => (prevDotCount + 1) % 4);
+      }, 100);
+    }
+
+    return () => {
+      if (intervalId !== undefined) {
+        clearInterval(intervalId);
+      }
+    };
+  }, [isLoading]);
+
+  const getLoadingText = () =>
+    `Searching Wikipedia articles on Weaviate${".".repeat(dotCount)}`;
 
   return (
     <Autocomplete
@@ -57,8 +77,7 @@ const WeaviateAutocomplete: React.FC<WeaviateAutocompleteProps> = ({
         <TextField {...params} label={label} variant="outlined" />
       )}
       autoHighlight={true}
-      autoSelect={true}
-      noOptionsText={isLoading ? "Searching..." : "No results"}
+      noOptionsText={isLoading ? getLoadingText() : "No results"}
       clearIcon={<ClearIcon color="primary" />}
       popupIcon={<ArrowDropDownIcon color="primary" />}
     />

@@ -1,8 +1,9 @@
 import VectorAnalogySolver from "./components/VectorAnalogySolver";
+import Footer from "./components/Footer";
 import "./App.css";
 
 import { createTheme, ThemeProvider } from "@mui/material/styles";
-import { CssBaseline } from "@mui/material";
+import { Box, CssBaseline } from "@mui/material";
 
 const theme = createTheme({
   palette: {
@@ -45,8 +46,13 @@ const theme = createTheme({
 function App() {
   return (
     <ThemeProvider theme={theme}>
-      <CssBaseline />
-      <VectorAnalogySolver />
+      <Box display="flex" flexDirection="column" minHeight="100vh">
+        <Box component="main" flexGrow={1}>
+          <CssBaseline />
+          <VectorAnalogySolver />
+        </Box>
+        <Footer />
+      </Box>
     </ThemeProvider>
   );
 }
