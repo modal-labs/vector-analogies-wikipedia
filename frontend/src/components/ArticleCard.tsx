@@ -9,11 +9,10 @@ interface ArticleCardProps {
   withEllipses: boolean;
 }
 
-// Styling the components using Material-UI's styled utility
 const StyledPaper = styled(Paper)(({ theme }) => ({
   padding: theme.spacing(2),
   margin: theme.spacing(2),
-  backgroundColor: theme.palette.background.paper, // Using theme's paper color for background
+  backgroundColor: theme.palette.background.paper,
 }));
 
 const ReadMoreButton = styled(Button)(({ theme }) => ({
@@ -24,7 +23,7 @@ const ArticleCard: React.FC<ArticleCardProps> = ({ article, withEllipses }) => {
   const snippet = article.content.slice(0, 750) + (withEllipses ? "..." : "");
 
   return (
-    <StyledPaper elevation={3}>
+    <StyledPaper elevation={3} sx={{ marginTop: "4rem" }}>
       <Typography variant="h5" component="h2" gutterBottom>
         {article.title}
       </Typography>

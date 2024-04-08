@@ -11,16 +11,20 @@ function VectorAnalogySolver() {
   const [a, setA] = useState<Article | null>(null);
   const [b, setB] = useState<Article | null>(null);
   const [c, setC] = useState<Article | null>(null);
-  const [result, setResult] = useState<Article | null>(helpArticle);
+  const [result, setResult] = useState<Article>(helpArticle);
+  const [isSearching, setIsSearching] = useState(false);
 
   useEffect(() => {
     const fetchVectorAnalogyResult = async () => {
       if (!a || !b || !c) {
         return;
       }
+
+      setIsSearching(true);
       const article = await getNearest(
         a.vector.map((aValue, i) => aValue + b.vector[i] - c.vector[i])
       );
+      setIsSearching(false);
 
       setResult(article);
     };
@@ -55,7 +59,13 @@ function VectorAnalogySolver() {
           onArticleSelect={(article: Article) => setC(article)}
         />
       </Box>
-      {result && (
+      {isSearching ? (
+        <Typography variant="h4">
+          <br />
+          <br />
+          completing analogy...
+        </Typography>
+      ) : (
         <ArticleCard
           article={result}
           withEllipses={result.identifier !== helpArticle.identifier}

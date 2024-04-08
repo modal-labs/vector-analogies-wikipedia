@@ -26,8 +26,8 @@ const WeaviateAutocomplete: React.FC<WeaviateAutocompleteProps> = ({
     const search = async (searchText: string) => {
       setIsLoading(true);
       const data = await searchArticles(searchText);
-      setOptions(data);
       setIsLoading(false);
+      setOptions(data);
     };
 
     if (inputValue) {
