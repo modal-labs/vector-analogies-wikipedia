@@ -34,13 +34,13 @@ def embed_dataset(down_scale: float = 1, batch_size: int = 512 * 50):
     model = modal.Cls.lookup(
         "text-embeddings-inference-wikipedia-wcs", "TextEmbeddingsInference"
     )
-    insert = modal.Cls.lookup("modal-weaviate", "WeaviateClient").insert
+    WeaviateClient = modal.Cls.lookup("modal-weaviate", "WeaviateClient")
     text_chunks = generate_chunks_from_dataset(subset, chunk_size=512)
     batches = generate_batches(text_chunks, batch_size=batch_size)
 
     print("🚀: running embedding engine")
     start = time.perf_counter()
-    ct, acc_characters = 0, 0
+    total, ct, acc_characters = 0, 0, 0
     batch_metadata, batch_embeddings = [], []
     handles = []
     for resp in model.embed.map(batches, order_outputs=False, return_exceptions=True):
@@ -66,19 +66,34 @@ def embed_dataset(down_scale: float = 1, batch_size: int = 512 * 50):
         if ct >= WEAVIATE_BATCH:
             print(f"🧶: inserting batch of size {len(batch_metadata)} into Weaviate")
             handles.append(
-                insert.spawn(metadata=batch_metadata, vectors=batch_embeddings)
+                WeaviateClient.insert.spawn(
+                    metadata=batch_metadata, vectors=batch_embeddings
+                )
             )
+            total += len(batch_metadata)
             batch_metadata, batch_embeddings = [], []
             ct = -1
         ct += 1
 
     if batch_metadata:
         print(f"🧶: inserting batch of size {len(batch_metadata)} into Weaviate")
-        handles.append(insert.spawn(metadata=batch_metadata, vectors=batch_embeddings))
+        handles.append(
+            WeaviateClient.insert.spawn(
+                metadata=batch_metadata, vectors=batch_embeddings
+            )
+        )
+        total += len(batch_metadata)
+        batch_metadata, batch_embeddings = [], []
 
     for handle in handles:
         handle.get()
     end = time.perf_counter()
+    print(f"🧶: sent {total} rows into Weaviate")
+    weaviate_count = WeaviateClient.total_count.remote()
+    if weaviate_count != total:
+        print(
+            f"🧶: Weaviate count mismatch: {weaviate_count} on Weaviate, {total} inserted"
+        )
 
     duration = end - start
     characters = acc_characters
@@ -95,8 +110,6 @@ def embed_dataset(down_scale: float = 1, batch_size: int = 512 * 50):
         "characters_per_sec": characters_per_sec,
         "extrapolated_duration": extrapolated_duration_cps_fmt,
     }
-
-    json.dumps(resp, indent=2)
 
     return resp
 

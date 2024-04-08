@@ -85,6 +85,9 @@ class WeaviateClient:
                 vectorizer_config=wvc.config.Configure.Vectorizer.none(),
                 vector_index_config=wvc.config.Configure.VectorIndex.hnsw(
                     distance_metric=wvc.config.VectorDistances.L2_SQUARED,
+                    quantizer=wvc.config.Configure.VectorIndex.Quantizer.pq(
+                        training_limit=50000
+                    ),
                     **VECTOR_INDEX_PARAMS,
                 ),
                 inverted_index_config=wvc.config.Configure.inverted_index(
@@ -132,7 +135,7 @@ class WeaviateClient:
         print(f"🧶: inserting {len(metadata)} rows into Wikipedia collection")
         ct = 0
         start = time.perf_counter()
-        with collection.batch.fixed_size(1000) as batch:
+        with collection.batch.fixed_size(1024) as batch:
             for md, v in zip(metadata, vectors):
                 batch.add_object(properties=md, vector=v)
                 ct += 1
@@ -163,6 +166,7 @@ class WeaviateClient:
         print(f"🧶: querying Wikipedia collection for '{q}'")
         results = collection.query.bm25(
             query=q,
+            query_properties=["title"],
             limit=5,
             include_vector=True,
         )
@@ -190,6 +194,13 @@ class WeaviateClient:
 
         return [obj.properties for obj in results.objects]
 
+    @modal.method()
+    def total_count(self):
+        result = self.client.collections.get("Wikipedia").aggregate.over_all(
+            total_count=True
+        )
+        return result.total_count
+
 
 @stub.function(keep_warm=1)
 @modal.web_endpoint()
@@ -209,4 +220,7 @@ def vector(data: dict) -> dict:
 
 @stub.local_entrypoint()
 def main(wipe: bool = False):
+    """Creates the collection if it doesn't exist, wiping it first if requested.
+
+    Run this function with `modal run database.py`."""
     WeaviateClient().create_collection.remote(wipe=wipe)
