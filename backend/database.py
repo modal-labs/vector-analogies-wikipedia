@@ -99,6 +99,10 @@ class WeaviateClient:
                         data_type=wvc.config.DataType.INT,
                     ),
                     wvc.config.Property(
+                        name="chunk_index",
+                        data_type=wvc.config.DataType.INT,
+                    ),
+                    wvc.config.Property(
                         name="content",
                         data_type=wvc.config.DataType.TEXT,
                         index_filterable=False,
@@ -113,7 +117,7 @@ class WeaviateClient:
                     wvc.config.Property(
                         name="title",
                         data_type=wvc.config.DataType.TEXT,
-                        index_filterable=False,
+                        index_filterable=True,
                         index_searchable=True,
                     ),
                 ],
@@ -164,13 +168,26 @@ class WeaviateClient:
         collection = client.collections.get("Wikipedia")
 
         print(f"🧶: querying Wikipedia collection for '{q}'")
-        results = collection.query.bm25(
+        bm25results = collection.query.bm25(
             query=q,
-            query_properties=["title"],
+            query_properties=["title", "content"],
             limit=5,
             include_vector=True,
         )
-        print(f"🧶: found {len(results.objects)} results")
+        print(f"🧶: BM25 found {len(bm25results.objects)} results")
+
+        title_results = collection.query.fetch_objects(
+            filters=wvc.query.Filter.by_property("title").equal(q),
+            sort=wvc.query.Sort.by_property(name="chunk_index", ascending=True),
+            include_vector=True,
+        )
+
+        print(f"🧶: title search found {len(title_results.objects)} results")
+
+        if title_results.objects:
+            results = title_results
+        else:
+            results = bm25results
 
         return [
             obj.properties | {"vector": obj.vector["default"]}

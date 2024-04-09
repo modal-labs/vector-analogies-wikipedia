@@ -57,8 +57,9 @@ def embed_dataset(down_scale: float = 1, batch_size: int = 512 * 50):
                 "url": chunk[1],
                 "title": chunk[2],
                 "content": chunk[3],
+                "chunk_index": int(chunk[4]),
             }
-            for chunk in chunks
+            for ii, chunk in enumerate(chunks)
         ]
 
         batch_metadata.extend(metadata)
@@ -156,16 +157,17 @@ def load_dataset_from_disk(down_scale: float = 0.01):
     return dataset["train"].select(range(sample_size))
 
 
-def generate_chunks_from_dataset(xs, chunk_size: int = 400):
+def generate_chunks_from_dataset(xs, chunk_size: int = 512):
     for data in xs:
         id_ = data["id"]
         url = data["url"]
         title = data["title"]
         text = data["text"]
-        for chunk_start in range(0, len(text), chunk_size):
+        for idx, chunk_start in enumerate(range(0, len(text), chunk_size)):
             yield (
                 id_,
                 url,
                 title,
                 text[chunk_start : chunk_start + chunk_size],
+                idx,
             )

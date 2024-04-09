@@ -20,15 +20,21 @@ LAUNCH_FLAGS = [
 
 
 GPU_CONFIG = modal.gpu.A10G()
-GPU_CONCURRENCY = 10
+GPU_CONCURRENCY = 4
 
 
 if isinstance(GPU_CONFIG, modal.gpu.A10G):
-    DOCKER_IMAGE =  "ghcr.io/huggingface/text-embeddings-inference:86-0.4.0"  # Ampere 86 for A10s
+    DOCKER_IMAGE = (
+        "ghcr.io/huggingface/text-embeddings-inference:86-0.4.0"  # Ampere 86 for A10s
+    )
 elif isinstance(GPU_CONFIG, modal.gpu.A100):
-    DOCKER_IMAGE = "ghcr.io/huggingface/text-embeddings-inference:0.4.0" # Ampere 80 for A100s
+    DOCKER_IMAGE = (
+        "ghcr.io/huggingface/text-embeddings-inference:0.4.0"  # Ampere 80 for A100s
+    )
 elif isinstance(GPU_CONFIG, modal.gpu.T4):
-    DOCKER_IMAGE = "ghcr.io/huggingface/text-embeddings-inference:0.3.0"  # Turing for T4s
+    DOCKER_IMAGE = (
+        "ghcr.io/huggingface/text-embeddings-inference:0.3.0"  # Turing for T4s
+    )
 
 tei_image = (
     modal.Image.from_registry(
@@ -45,6 +51,7 @@ with tei_image.imports():
     import numpy as np
 
 stub = modal.Stub("text-embeddings-inference-wikipedia-wcs", image=tei_image)
+
 
 def spawn_server():
     import socket
