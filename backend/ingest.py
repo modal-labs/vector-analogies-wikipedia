@@ -7,7 +7,7 @@ from vectors import GPU_CONCURRENCY
 
 stub = modal.Stub("wikipedia-wcs", image=image)
 
-WEAVIATE_BATCH = 10
+WEAVIATE_BATCH = 10 * 5120
 
 
 @stub.function(
@@ -41,7 +41,7 @@ def embed_dataset(down_scale: float = 1, batch_size: int = 512 * 50):
 
     print("🚀: running embedding engine")
     start = time.perf_counter()
-    total, ct, acc_characters = 0, 0, 0
+    total, acc_characters = 0, 0
     batch_metadata, batch_embeddings = [], []
     handles = []
     for resp in model.embed.map(batches, order_outputs=False, return_exceptions=True):
@@ -65,7 +65,7 @@ def embed_dataset(down_scale: float = 1, batch_size: int = 512 * 50):
         batch_metadata.extend(metadata)
         batch_embeddings.extend(embeddings)
 
-        if ct >= WEAVIATE_BATCH:
+        if len(batch_metadata) >= WEAVIATE_BATCH:
             print(f"🧶: inserting batch of size {len(batch_metadata)} into Weaviate")
             handles.append(
                 WeaviateClient.insert.spawn(
@@ -74,8 +74,6 @@ def embed_dataset(down_scale: float = 1, batch_size: int = 512 * 50):
             )
             total += len(batch_metadata)
             batch_metadata, batch_embeddings = [], []
-            ct = -1
-        ct += 1
 
     if batch_metadata:
         print(f"🧶: inserting batch of size {len(batch_metadata)} into Weaviate")

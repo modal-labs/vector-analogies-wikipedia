@@ -13,11 +13,11 @@ REPORT_INSERT = 5120
 
 VECTOR_INDEX_PARAMS = {
     # graph parameter: maximum number of connections per element
-    "max_connections": 32,
+    "max_connections": 16,
     # efficiency factor: how many elements to consider as candidate neighbors during queries
-    "ef": 32,
+    "ef": 16,
     # efficiency factor at construction: same as ef, but for the initial construction of the index
-    "ef_construction": 64,
+    "ef_construction": 32,
 }
 
 with image.imports():
@@ -32,9 +32,9 @@ HOURS = 60 * MINUTES
 @stub.cls(
     concurrency_limit=8,
     timeout=12 * HOURS,
-    container_idle_timeout=60,
+    container_idle_timeout=5 * MINUTES,
     cpu=1,  # 4x over-provisioned
-    memory=2048,  # 2x over-provisioned
+    memory=2048,  # 4x over-provisioned
 )
 class WeaviateClient:
     @modal.enter()
@@ -106,7 +106,7 @@ class WeaviateClient:
                         name="content",
                         data_type=wvc.config.DataType.TEXT,
                         index_filterable=False,
-                        index_searchable=False,
+                        index_searchable=True,
                     ),
                     wvc.config.Property(
                         name="url",

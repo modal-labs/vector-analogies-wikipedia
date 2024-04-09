@@ -20,7 +20,7 @@ LAUNCH_FLAGS = [
 
 
 GPU_CONFIG = modal.gpu.A10G()
-GPU_CONCURRENCY = 4
+GPU_CONCURRENCY = 2  # ratio of indexing throughput to embedding throughput
 
 
 if isinstance(GPU_CONFIG, modal.gpu.A10G):
