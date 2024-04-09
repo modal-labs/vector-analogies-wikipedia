@@ -22,7 +22,7 @@ function VectorAnalogySolver() {
 
       setIsSearching(true);
       const article = await getNearest(
-        a.vector.map((aValue, i) => aValue + b.vector[i] - c.vector[i])
+        a.vector.map((_, i) => a.vector[i] + b.vector[i] - c.vector[i])
       );
       setIsSearching(false);
 
