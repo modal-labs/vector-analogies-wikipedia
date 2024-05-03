@@ -184,6 +184,12 @@ class WeaviateClient:
             include_vector=True,
         )
         print(f"🧶: BM25 found {len(bm25results.objects)} results")
+        if bm25results.objects:
+            print(
+                "🧶: first BM25 result",
+                bm25results.objects[0].properties["content"],
+                sep="\n\t",
+            )
 
         title_results = collection.query.fetch_objects(
             filters=wvc.query.Filter.by_property("title").equal(q),
@@ -192,6 +198,12 @@ class WeaviateClient:
         )
 
         print(f"🧶: title match found {len(title_results.objects)} results")
+        if title_results.objects:
+            print(
+                "🧶: first title result",
+                title_results.objects[0].properties["content"],
+                sep="\n\t",
+            )
 
         if title_results.objects:
             results = title_results
@@ -239,7 +251,7 @@ def query(q: str) -> dict:
 def vector(data: dict) -> dict:
     vector = data["vector"]
     results = WeaviateClient().query_vector.remote(vector)
-    print("🧶: vector query reutrned results")
+    print("🧶: vector query returned results")
     print(results)
     return {"results": results}
 
