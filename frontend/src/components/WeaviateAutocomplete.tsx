@@ -10,13 +10,15 @@ import { Article } from "../types/article";
 interface WeaviateAutocompleteProps {
   label: string;
   onArticleSelect: (article: Article) => void;
+  initialInputValue?: string;
 }
 
 const WeaviateAutocomplete: React.FC<WeaviateAutocompleteProps> = ({
   label,
   onArticleSelect,
+  initialInputValue,
 }) => {
-  const [inputValue, setInputValue] = useState("");
+  const [inputValue, setInputValue] = useState(initialInputValue || "");
   const [options, setOptions] = useState<Article[]>([]);
   const timer = useRef<number>();
   const [isLoading, setIsLoading] = useState(false);

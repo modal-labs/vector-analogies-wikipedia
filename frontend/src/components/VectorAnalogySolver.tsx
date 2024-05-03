@@ -41,7 +41,7 @@ function VectorAnalogySolver() {
           What is to
         </Typography>
         <WeaviateAutocomplete
-          label="This snippet"
+          label="this snippet"
           onArticleSelect={(article: Article) => setA(article)}
         />
         <Typography className="operator" variant="h3">
@@ -50,6 +50,7 @@ function VectorAnalogySolver() {
         <WeaviateAutocomplete
           label="this snippet"
           onArticleSelect={(article: Article) => setB(article)}
+          initialInputValue="Albert Einstein"
         />
         <Typography className="operator" variant="h3">
           is to
@@ -57,6 +58,7 @@ function VectorAnalogySolver() {
         <WeaviateAutocomplete
           label="this snippet"
           onArticleSelect={(article: Article) => setC(article)}
+          initialInputValue="Physics"
         />
       </Box>
       {isSearching ? (
