@@ -1,6 +1,6 @@
 import modal
 
-from common import generate_batches
+from .common import generate_batches
 
 MODEL_ID = "BAAI/bge-small-en-v1.5"
 MODEL_SLUG = MODEL_ID.split("/")[-1]
@@ -20,7 +20,9 @@ LAUNCH_FLAGS = [
 
 
 GPU_CONFIG = modal.gpu.A10G()
-GPU_CONCURRENCY = 2  # ratio of indexing throughput to embedding throughput
+GPU_CONCURRENCY = (
+    6  # ratio of total indexing throughput to per GPU embedding throughput
+)
 
 
 if isinstance(GPU_CONFIG, modal.gpu.A10G):
@@ -50,7 +52,7 @@ with tei_image.imports():
 
     import numpy as np
 
-stub = modal.Stub("text-embeddings-inference-wikipedia-wcs", image=tei_image)
+app = modal.App("text-embeddings-inference-wikipedia-wcs", image=tei_image)
 
 
 def spawn_server():
@@ -73,7 +75,7 @@ def spawn_server():
                 raise RuntimeError(f"launcher exited unexpectedly with code {retcode}")
 
 
-@stub.cls(
+@app.cls(
     gpu=GPU_CONFIG,
     image=tei_image,
     concurrency_limit=GPU_CONCURRENCY,

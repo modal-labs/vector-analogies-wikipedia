@@ -1,4 +1,4 @@
-benchmarks*.json
+benchmarks*.jsonl
 
 
 # dotenv environment variable files

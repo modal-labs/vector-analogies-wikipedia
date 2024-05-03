@@ -1,16 +1,17 @@
 import json
+from pathlib import Path
 
 import modal
 
-from common import cache_dir, volume, image, generate_batches
-from vectors import GPU_CONCURRENCY
+from .common import cache_dir, volume, image, generate_batches
+from .vectors import GPU_CONCURRENCY
 
-stub = modal.Stub("wikipedia-wcs", image=image)
+app = modal.App("wikipedia-wcs", image=image)
 
-WEAVIATE_BATCH = 10 * 5120
+WEAVIATE_BATCH = (20 // GPU_CONCURRENCY) * 5120
 
 
-@stub.function(
+@app.function(
     image=image,
     volumes={
         cache_dir: volume,
@@ -88,7 +89,7 @@ def embed_dataset(down_scale: float = 1, batch_size: int = 512 * 50):
     for handle in handles:
         handle.get()
     end = time.perf_counter()
-    print(f"🧶: sent {total} rows into Weaviate")
+    print(f"🧶: sent {total} rows to Weaviate")
     weaviate_count = WeaviateClient.total_count.remote()
     if weaviate_count != total:
         print(
@@ -98,7 +99,8 @@ def embed_dataset(down_scale: float = 1, batch_size: int = 512 * 50):
     duration = end - start
     characters = acc_characters
     characters_per_sec = int(characters / duration)
-    dataset_chars = 19560538957  # sum(map(len, dataset["train"]["text"]))
+    rows_per_sec = int(total / duration)
+    dataset_chars = 19_560_538_957  # sum(map(len, dataset["train"]["text"]))
     extrapolated_duration_cps_fmt = str(
         datetime.timedelta(seconds=dataset_chars / characters_per_sec)
     )
@@ -108,13 +110,14 @@ def embed_dataset(down_scale: float = 1, batch_size: int = 512 * 50):
         "n_gpu": GPU_CONCURRENCY,
         "duration_mins": duration / 60,
         "characters_per_sec": characters_per_sec,
+        "rows_per_sec": rows_per_sec,
         "extrapolated_duration": extrapolated_duration_cps_fmt,
     }
 
     return resp
 
 
-@stub.local_entrypoint()
+@app.local_entrypoint()
 def main(down_scale: float = 1.0, annotation: str = ""):
     batch_size = 512 * 2 * GPU_CONCURRENCY
     downscale_str = (
@@ -122,10 +125,12 @@ def main(down_scale: float = 1.0, annotation: str = ""):
         if down_scale >= 0.01
         else f"{int(down_scale * 1000)}m"
     )
-    with open(f"benchmarks-{downscale_str}.json", "a") as f:
+    benchmarks_folder = Path(__file__).parent / "benchmarks"
+    benchmarks_folder.mkdir(exist_ok=True)
+    with open(benchmarks_folder / f"benchmarks-{downscale_str}.jsonl", "a") as f:
         benchmark = embed_dataset.remote(down_scale=down_scale, batch_size=batch_size)
         benchmark["annotation"] = annotation
-        f.write(json.dumps(benchmark, indent=2) + "\n")
+        f.write(json.dumps(benchmark) + "\n")
 
 
 def load_dataset_from_disk(down_scale: float = 0.01):
