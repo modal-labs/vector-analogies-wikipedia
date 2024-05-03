@@ -126,7 +126,7 @@ If you'd like to run the entire pipeline yourself, there are several additional 
 
 3. Redeploy the new write-authorized Weaviate client for your instance with `modal deploy backend.database`.
 
-4. Download the Wikipedia dataset from [Hugging Face](https://huggingface.co/datasets/wikipedia) and with `modal run backend.download`. This step takes five to ten minutes.
+4. Download the Wikipedia dataset from [Hugging Face](https://huggingface.co/datasets/wikipedia) with `modal run backend.download`. This step takes five to ten minutes.
 
 5. Deploy the (serverless) vector embedding service with `modal deploy backend.vectors`.
 
