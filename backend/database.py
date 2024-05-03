@@ -2,11 +2,11 @@ import time
 
 import modal
 
-image = modal.Image.debian_slim().pip_install(
+image = modal.Image.debian_slim(python_version="3.11").pip_install(
     "weaviate-client==4.5.4", "fastapi==0.110.1"
 )
-stub = modal.Stub(
-    "modal-weaviate", image=image, secrets=[modal.Secret.from_name("wikipedia-wcs")]
+app = modal.App(
+    "modal-weaviate", image=image, secrets=[modal.Secret.from_name("wiki-weaviate")]
 )
 
 REPORT_INSERT = 5120
@@ -28,8 +28,10 @@ with image.imports():
 MINUTES = 60
 HOURS = 60 * MINUTES
 
+COLLECTION_NAME = "Wikipedia"
 
-@stub.cls(
+
+@app.cls(
     concurrency_limit=8,
     timeout=12 * HOURS,
     container_idle_timeout=5 * MINUTES,
@@ -39,9 +41,18 @@ HOURS = 60 * MINUTES
 class WeaviateClient:
     @modal.enter()
     def connect(self):
+        weaviate_api_key = os.getenv("WCS_ADMIN_KEY")
+        if weaviate_api_key is None:
+            weaviate_api_key = os.getenv("WCS_RO_KEY")
+            if weaviate_api_key is None:
+                raise ValueError(
+                    "🧶: WCS_ADMIN_KEY or WCS_RO_KEY must be set in wiki-weaviate secret"
+                )
+            else:
+                print("🧶: using read-only Weaviate key")
         self.client = weaviate.connect_to_wcs(
-            os.getenv("WCS_URL"),
-            weaviate.auth.AuthApiKey(os.getenv("WCS_ADMIN_KEY")),
+            os.environ["WCS_URL"],
+            weaviate.auth.AuthApiKey(weaviate_api_key),
             additional_config=weaviate.config.AdditionalConfig(
                 timeout=(10 * MINUTES, 10 * MINUTES)
             ),
@@ -65,23 +76,23 @@ class WeaviateClient:
         client = self.client
         print("🧶: connected to Weaviate")
 
-        if client.collections.exists("Wikipedia") and not wipe:
+        if client.collections.exists(COLLECTION_NAME) and not wipe:
             print(
-                "🧶: collection for Wikipedia already exists. Set wipe to True to delete and recreate it."
+                f"🧶: collection {COLLECTION_NAME} already exists. Set wipe to True to delete and recreate it."
             )
         else:
             if wipe:
-                print("🧶: deleting existing collection for Wikipedia")
-                client.collections.delete("Wikipedia")
+                print(f"🧶: deleting existing collection {COLLECTION_NAME}")
+                client.collections.delete(COLLECTION_NAME)
                 wait, backoff = 5, 1.25
-                while client.collections.exists("Wikipedia"):
+                while client.collections.exists(COLLECTION_NAME):
                     print("🧶: waiting for collection to be deleted")
                     time.sleep(wait)
                     wait *= backoff
-                print("🧶: collection for Wikipedia deleted")
-            print("🧶: creating collection for Wikipedia")
+                print("🧶: collection deleted")
+            print(f"🧶: creating collection {COLLECTION_NAME}")
             client.collections.create(
-                "Wikipedia",
+                COLLECTION_NAME,
                 vectorizer_config=wvc.config.Configure.Vectorizer.none(),
                 vector_index_config=wvc.config.Configure.VectorIndex.hnsw(
                     distance_metric=wvc.config.VectorDistances.L2_SQUARED,
@@ -106,7 +117,7 @@ class WeaviateClient:
                         name="content",
                         data_type=wvc.config.DataType.TEXT,
                         index_filterable=False,
-                        index_searchable=True,
+                        index_searchable=False,
                     ),
                     wvc.config.Property(
                         name="url",
@@ -124,19 +135,18 @@ class WeaviateClient:
             )
 
         assert client.collections.exists(
-            "Wikipedia"
-        ), "Error creating collection for Wikipedia"
+            COLLECTION_NAME
+        ), f"Error creating collection {COLLECTION_NAME}"
 
-        print("🧶: collection for Wikipedia available")
+        print(f"🧶: collection {COLLECTION_NAME} available")
 
     @modal.method()
     def insert(self, metadata, vectors):
         client = self.client
-        print("🧶: connected to Weaviate")
 
-        collection = client.collections.get("Wikipedia")
+        collection = client.collections.get(COLLECTION_NAME)
 
-        print(f"🧶: inserting {len(metadata)} rows into Wikipedia collection")
+        print(f"🧶: inserting {len(metadata)} rows into {COLLECTION_NAME} collection")
         ct = 0
         start = time.perf_counter()
         with collection.batch.fixed_size(1024) as batch:
@@ -146,15 +156,15 @@ class WeaviateClient:
                 if (ct % REPORT_INSERT) == 0:
                     duration = time.perf_counter() - start
                     print(
-                        f"🧶: inserted {ct} rows into Wikipedia collection in {int(duration) if duration > 1 else round(duration, 2)}s, throughput {int(ct / duration)} rows/s"
+                        f"🧶: inserted {ct} rows into {COLLECTION_NAME} collection in {int(duration) if duration > 1 else round(duration, 2)}s, throughput {int(ct / duration)} rows/s"
                     )
 
-        print("🧶: finished inserting data into Wikipedia collection")
+        print(f"🧶: finished inserting data into {COLLECTION_NAME} collection")
 
     @modal.method()
     def get_node_info(self):
         nodes_info = self.client.cluster.nodes(
-            collection="Wikipedia",
+            collection=COLLECTION_NAME,
             output="verbose",
         )
         print("🧶: Weaviate node info", *nodes_info, sep="\n\t")
@@ -163,15 +173,14 @@ class WeaviateClient:
     @modal.method()
     def query(self, q: str):
         client = self.client
-        print("🧶: connected to Weaviate")
 
-        collection = client.collections.get("Wikipedia")
+        collection = client.collections.get(COLLECTION_NAME)
 
-        print(f"🧶: querying Wikipedia collection for '{q}'")
+        print(f"🧶: querying {COLLECTION_NAME} collection for '{q}'")
         bm25results = collection.query.bm25(
             query=q,
-            query_properties=["title", "content"],
-            limit=5,
+            query_properties=["title"],
+            limit=10,
             include_vector=True,
         )
         print(f"🧶: BM25 found {len(bm25results.objects)} results")
@@ -182,7 +191,7 @@ class WeaviateClient:
             include_vector=True,
         )
 
-        print(f"🧶: title search found {len(title_results.objects)} results")
+        print(f"🧶: title match found {len(title_results.objects)} results")
 
         if title_results.objects:
             results = title_results
@@ -197,12 +206,11 @@ class WeaviateClient:
     @modal.method()
     def query_vector(self, vector: [float]):
         client = self.client
-        print("🧶: connected to Weaviate")
 
-        collection = client.collections.get("Wikipedia")
+        collection = client.collections.get(COLLECTION_NAME)
 
         print(
-            f"🧶: querying vector [{vector[0]}, {vector[1]}, {vector[2]}...] against Wikipedia collection"
+            f"🧶: querying vector [{vector[0]}, {vector[1]}, {vector[2]}...] against {COLLECTION_NAME} collection"
         )
         results = collection.query.near_vector(
             near_vector=vector, limit=1, include_vector=False
@@ -213,31 +221,34 @@ class WeaviateClient:
 
     @modal.method()
     def total_count(self):
-        result = self.client.collections.get("Wikipedia").aggregate.over_all(
+        result = self.client.collections.get(COLLECTION_NAME).aggregate.over_all(
             total_count=True
         )
         return result.total_count
 
 
-@stub.function(keep_warm=1)
+@app.function(keep_warm=1)
 @modal.web_endpoint()
 def query(q: str) -> dict:
     results = WeaviateClient().query.remote(q)
     return {"results": results}
 
 
-@stub.function(keep_warm=1)
+@app.function(keep_warm=1)
 @modal.web_endpoint(method="POST")
 def vector(data: dict) -> dict:
     vector = data["vector"]
     results = WeaviateClient().query_vector.remote(vector)
+    print("🧶: vector query reutrned results")
     print(results)
     return {"results": results}
 
 
-@stub.local_entrypoint()
+@app.local_entrypoint()
 def main(wipe: bool = False):
     """Creates the collection if it doesn't exist, wiping it first if requested.
+
+    Note that this script can only be run if the `WCS_ADMIN_KEY` is set in the `wiki-weaviate` secret.
 
     Run this function with `modal run database.py`."""
     WeaviateClient().create_collection.remote(wipe=wipe)
