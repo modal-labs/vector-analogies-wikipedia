@@ -4,7 +4,9 @@ import modal
 cache_dir = "/data"
 volume = modal.Volume.from_name("embedding-wikipedia-weaviate", create_if_missing=True)
 
-image = modal.Image.debian_slim(python_version="3.11").pip_install("datasets")
+image = modal.Image.debian_slim(python_version="3.11").pip_install(
+    "datasets", "numpy==1.26.4"
+)
 
 
 def generate_batches(xs, batch_size=512):

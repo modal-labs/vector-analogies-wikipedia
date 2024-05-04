@@ -3,7 +3,7 @@ import time
 import modal
 
 image = modal.Image.debian_slim(python_version="3.11").pip_install(
-    "weaviate-client==4.5.4", "fastapi==0.110.1"
+    "weaviate-client==4.5.4", "fastapi==0.110.1", "numpy==1.26.4"
 )
 app = modal.App(
     "modal-weaviate", image=image, secrets=[modal.Secret.from_name("wiki-weaviate")]

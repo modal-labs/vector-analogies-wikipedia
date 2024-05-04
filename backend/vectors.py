@@ -44,7 +44,7 @@ tei_image = (
         add_python="3.10",
     )
     .dockerfile_commands("ENTRYPOINT []")
-    .pip_install("httpx")
+    .pip_install("httpx", "numpy==1.26.4")
 )
 
 with tei_image.imports():
