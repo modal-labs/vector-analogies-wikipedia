@@ -6,7 +6,7 @@ import modal
 from .common import cache_dir, volume, image, generate_batches
 from .vectors import GPU_CONCURRENCY
 
-app = modal.App("wikipedia-wcs", image=image)
+app = modal.App("ingest-wikipedia-wcs", image=image)
 
 WEAVIATE_BATCH = (20 // GPU_CONCURRENCY) * 5120
 
@@ -18,7 +18,7 @@ WEAVIATE_BATCH = (20 // GPU_CONCURRENCY) * 5120
     },
     timeout=86400,
 )
-def embed_dataset(down_scale: float = 1, batch_size: int = 512 * 50):
+def embed_dataset(down_scale: float = 1, batch_size: int = 512 * 2 * GPU_CONCURRENCY):
     """
     Embeds a dataset with the Text Embeddings Inference container and send the results to Weaviate.
 
