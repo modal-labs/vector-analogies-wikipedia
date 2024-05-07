@@ -1,4 +1,4 @@
-# Embed Wikipedia with Modal and ingest it into Weaviate
+# Embed Wikipedia with Modal and search it with Weaviate
 
 [![Albert Einstein - Physics + Basketball ~= Kobe Bryant](https://vector-analogies-wikipedia.vercel.app/einstein-bryant.png)](https://vector-analogies-wikipedia.vercel.app/)
 
@@ -11,7 +11,7 @@ with data-intensive search, like indexing all of Wikipedia.
 
 You can find the code on GitHub [here](https://github.com/modal-labs/vector-analogies-wikipedia).
 It's intended as a jumping off point for your own code that combines
-Modal with vector databases like Weaviate and with JavaScript frontends.
+Modal with databases like Weaviate and with JavaScript frontends.
 It is also deployed as a [live demo application](https://vector-analogies-wikipedia.vercel.app/).
 
 ## What does it do?
@@ -28,8 +28,8 @@ Albert Einstein - Physics + Basketball ~= Kobe Bryant
 expresses the analogy "Kobe Bryant is the Albert Einstein of basketball".
 We can compute it by applying those operations to embedding vectors of each concept,
 where `~=` is implemented using an
-[approximate nearest-neighbor search index](https://weaviate.io/developers/weaviate/concepts/indexing)
-the key method used in vector databases.
+[approximate nearest-neighbor search index](https://weaviate.io/developers/weaviate/concepts/indexing),
+the key method used for querying in vector databases.
 
 Where Word2Vec used word embeddings to express concepts, we use snippets of Wikipedia articles.
 The dataset used was constructed from the March 2022 WikiMedia dump [by Hugging Face](https://huggingface.co/datasets/wikipedia).
@@ -179,4 +179,4 @@ If you'd like to share your own version of this app, you'll need to host it some
 
 We took advantage of
 [Vercel's excellent support for React apps](https://vercel.com/guides/deploying-react-with-vercel)
-to deploy directly from the GitHub repository.
+to deploy directly from the GitHub repository
