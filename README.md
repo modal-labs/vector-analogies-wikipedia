@@ -1,5 +1,6 @@
-# Vector Analogies on Wikipedia
-### Powered by [Modal](https://modal.com) & [Weaviate](https://weaviate.io)
+# Embed Wikipedia with Modal and ingest it into Weaviate
+
+[![Albert Einstein - Physics + Basketball ~= Kobe Bryant](https://vector-analogies-wikipedia.vercel.app/einstein-bryant.png)](https://vector-analogies-wikipedia.vercel.app/)
 
 ## What is this for?
 
@@ -8,13 +9,15 @@ and the search capabilities of [Weaviate](https://weaviate.io)
 for projects that combine data-intensive Python compute, like neural network inference,
 with data-intensive search, like indexing all of Wikipedia.
 
+You can find the code on GitHub [here](https://github.com/modal-labs/vector-analogies-wikipedia).
 It's intended as a jumping off point for your own code that combines
 Modal with vector databases like Weaviate and with JavaScript frontends.
 It is also deployed as a [live demo application](https://vector-analogies-wikipedia.vercel.app/).
 
 ## What does it do?
 
-The `frontend` of this project (written in React, hosted on [Vercel](https://vercel.com))
+The [`frontend`](https://github.com/modal-labs/vector-analogies-wikipedia/tree/main/frontend)
+of this project (written in React, hosted on [Vercel](https://vercel.com))
 allows users to construct "vector analogies" of the form made famous by [Word2Vec](https://arxiv.org/abs/1301.3781).
 For example, the approximate equation
 
@@ -24,12 +27,9 @@ Albert Einstein - Physics + Basketball ~= Kobe Bryant
 
 expresses the analogy "Kobe Bryant is the Albert Einstein of basketball".
 We can compute it by applying those operations to embedding vectors of each concept,
-where `~=` is implemented using approximate nearest-neighbor search,
+where `~=` is implemented using an
+[approximate nearest-neighbor search index](https://weaviate.io/developers/weaviate/concepts/indexing)
 the key method used in vector databases.
-
-Here's that analogy computed and visualized in this app:
-
-![Albert Einstein - Physics + Basketball ~= Kobe Bryant](frontend/public/einstein-bryant.png)
 
 Where Word2Vec used word embeddings to express concepts, we use snippets of Wikipedia articles.
 The dataset used was constructed from the March 2022 WikiMedia dump [by Hugging Face](https://huggingface.co/datasets/wikipedia).
@@ -39,7 +39,7 @@ using Weaviate text search under the hood,
 and once they've selected the three components of their analogy,
 the frontend kicks off a vector search to complete it.
 
-Both searches are coordinated by a `backend` Python service running on Modal.
+Both searches are coordinated by a [`backend`](https://github.com/modal-labs/vector-analogies-wikipedia/tree/main/backend) Python service running on Modal.
 
 Modal is also used to construct embeddings for snippets and then insert them into Weaviate.
 You can read more about the embedding process [here](https://modal.com/blog/embedding-wikipedia).
@@ -78,7 +78,7 @@ If you don't already have a Modal account, get started with
 Next, we set up a Weaviate client on Modal that reads from a Weaviate database
 that has already ingested and indexed the Wikipedia data.
 
-Add `WCS_URL=https://gzimzbmdr6ycxyja715rsa.c0.us-west4.gcp.weaviate.cloud` and the `WCS_RO_KEY=tUeQG12AkFLBY9SYOWVh2y00hZ25yu8va0UP` key to a [`modal.Secret`](https://modal.com/docs/guide/secrets) called `wiki-weaviate`.
+Add `WCS_URL=https://gzimzbmdr6ycxyja715rsa.c0.us-west4.gcp.weaviate.cloud` and `WCS_RO_KEY=tUeQG12AkFLBY9SYOWVh2y00hZ25yu8va0UP` to a [`modal.Secret`](https://modal.com/docs/guide/secrets) called `wiki-weaviate`.
 
 Then, run the following command from the repo root to create a database client on Modal.
 
@@ -131,6 +131,7 @@ If you'd like to run the entire pipeline yourself, there are several additional 
 5. Deploy the (serverless) vector embedding service with `modal deploy backend.vectors`.
 
 6. Embed the dataset and send the results to Weaviate by invoking `modal run backend.ingest`. This can take several hours. Use the `--down-scale` option to reduce the fraction of the data you ingest. Ten percent (`--downscale=0.1`) is enough to get fair results, and 1% or 0.1% will do in a pinch.
+
 </details>
 
 Note that ingesting and indexing Wikipedia takes several hours!
@@ -178,4 +179,4 @@ If you'd like to share your own version of this app, you'll need to host it some
 
 We took advantage of
 [Vercel's excellent support for React apps](https://vercel.com/guides/deploying-react-with-vercel)
-to deploy directly from this GitHub repository.
+to deploy directly from the GitHub repository.
