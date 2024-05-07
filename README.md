@@ -2,9 +2,7 @@
 
 [![Albert Einstein - Physics + Basketball ~= Kobe Bryant](https://vector-analogies-wikipedia.vercel.app/einstein-bryant.png)](https://vector-analogies-wikipedia.vercel.app/)
 
-## What is this for?
-
-This is a sample project that demonstrates the powerful combo of serverless infrastructure from [Modal](https://modal.com)
+This sample project demonstrates the powerful combo of serverless infrastructure from [Modal](https://modal.com)
 and the search capabilities of [Weaviate](https://weaviate.io)
 for projects that combine data-intensive Python compute, like neural network inference,
 with data-intensive search, like indexing all of Wikipedia.
@@ -14,12 +12,12 @@ It's intended as a jumping off point for your own code that combines
 Modal with databases like Weaviate and with JavaScript frontends.
 It is also deployed as a [live demo application](https://vector-analogies-wikipedia.vercel.app/).
 
-## What does it do?
+## Overview
 
 The [`frontend`](https://github.com/modal-labs/vector-analogies-wikipedia/tree/main/frontend)
 of this project (written in React, hosted on [Vercel](https://vercel.com))
 allows users to construct "vector analogies" of the form made famous by [Word2Vec](https://arxiv.org/abs/1301.3781).
-For example, the approximate equation
+For example, the approximation
 
 ```
 Albert Einstein - Physics + Basketball ~= Kobe Bryant
@@ -43,9 +41,9 @@ Both searches are coordinated by a [`backend`](https://github.com/modal-labs/vec
 
 Modal is also used to construct embeddings for snippets and then insert them into Weaviate.
 You can read more about the embedding process [here](https://modal.com/blog/embedding-wikipedia).
-We also wrote up the concerns and considerations for integrating Modal with Weaviate [here](https://link-to-weaviate-blog.com/modal-weaviate).
+We also wrote a high level guide to this project [here](https://weaviate.io/blog/modal-and-weaviate).
 
-## How do I set it up?
+## Run it yourself
 
 The full, end-to-end version of this project involves a number of services and workflows:
 
@@ -116,6 +114,7 @@ curl https://modal-labs--modal-weaviate-query.modal.run\?q\=Albert%20Einstein \
 ### Optional: Embed and index Wikipedia yourself
 
 If you'd like to run the entire pipeline yourself, there are several additional steps.
+
 <details>
 <summary> Click here to reveal them.
 </summary>
@@ -179,4 +178,4 @@ If you'd like to share your own version of this app, you'll need to host it some
 
 We took advantage of
 [Vercel's excellent support for React apps](https://vercel.com/guides/deploying-react-with-vercel)
-to deploy directly from the GitHub repository
+to deploy directly from the GitHub repository.
